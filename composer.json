@@ -1,6 +1,7 @@
 {
     "name": "codemagpie/array2object",
     "type": "library",
+    "description": "A high performance, Supports converting array into object and object into array, easy to use",
     "keywords": ["codemagpie", "array", "object", "array2object", "array to object", "convert"],
     "authors": [
         {

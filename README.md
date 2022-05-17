@@ -1,6 +1,6 @@
 # Array To Object
 ## Introduction
-Supports converting array into object and object into array, easy to us
+Supports converting array into object and object into array, easy to use
 ## Installation
 ```shell
 composer require codemagpie/array2object

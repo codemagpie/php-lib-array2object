@@ -11,8 +11,10 @@ declare(strict_types=1);
  */
 namespace CodeMagpie\ArrayToObjectTests;
 
+use CodeMagpie\ArrayToObject\Utils\PropertyDocParser;
 use CodeMagpie\ArrayToObject\Utils\PropertyParser;
-use CodeMagpie\ArrayToObjectTests\Stubs\PropertyDemo;
+use CodeMagpie\ArrayToObjectTests\Stubs\User;
+use CodeMagpie\ArrayToObjectTests\Stubs\User1;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -23,22 +25,33 @@ class PropertyParserTest extends TestCase
 {
     public function testParseType(): void
     {
-        $parser = new PropertyParser(PropertyDemo::class);
-        $propertyTypes = $parser->parseType();
-        self::assertArrayNotHasKey('age', $propertyTypes);
-        self::assertEquals('string', $propertyTypes['name']->type);
-        self::assertEquals('string', $propertyTypes['email']->type);
-        self::assertEquals(true, $propertyTypes['phone']->nullable);
-        self::assertEquals('string', $propertyTypes['hobby']->child->type);
-        self::assertEquals(null, $propertyTypes['address']->child);
-        self::assertEquals(false, $propertyTypes['child']->nullable);
-        self::assertEquals(PropertyDemo::class, $propertyTypes['child']->className);
-        self::assertEquals(PropertyDemo::class, $propertyTypes['children']->child->className);
+        $parser = new PropertyParser();
+        $propertyTypes = $parser->parseType(User::class);
+        self::assertEquals('string', $propertyTypes['name']->getType());
+        self::assertEquals(true, $propertyTypes['email']->isMixed());
+        self::assertEquals(true, $propertyTypes['phone']->isNullable());
+        self::assertEquals('int', $propertyTypes['hobby']->getChild()->getType());
+        self::assertEquals(null, $propertyTypes['address']->getChild());
+        self::assertEquals(false, $propertyTypes['child']->isNullable());
+        self::assertEquals('profileInfo', $propertyTypes['profileInfo']->getPropertyNameHump());
+        self::assertEquals('profile_info', $propertyTypes['profileInfo']->getPropertyNameLine());
+        self::assertEquals(User::class, $propertyTypes['child']->getClassName());
+        self::assertEquals(User::class, $propertyTypes['children']->getChild()->getClassName());
     }
 
-    public function test111()
+    public function testDocParserType(): void
     {
-        $a = ['name' => null];
-        var_dump(array_key_exists('name', $a));
+        $parser = new PropertyDocParser();
+        $propertyTypes = $parser->parseType(User1::class);
+        self::assertEquals('string', $propertyTypes['name']->getType());
+        self::assertEquals(true, $propertyTypes['email']->isMixed());
+        self::assertEquals(true, $propertyTypes['phone']->isNullable());
+        self::assertEquals('int', $propertyTypes['hobby']->getChild()->getType());
+        self::assertEquals(null, $propertyTypes['address']->getChild());
+        self::assertEquals(false, $propertyTypes['child']->isNullable());
+        self::assertEquals('profileInfo', $propertyTypes['profileInfo']->getPropertyNameHump());
+        self::assertEquals('profile_info', $propertyTypes['profileInfo']->getPropertyNameLine());
+        self::assertEquals(User1::class, $propertyTypes['child']->getClassName());
+        self::assertEquals(User1::class, $propertyTypes['children']->getChild()->getClassName());
     }
 }

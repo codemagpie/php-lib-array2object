@@ -18,5 +18,5 @@ interface PropertyParserInterface
     /**
      * @return array<string,PropertyType>
      */
-    public function parseType(): array;
+    public function parseType(string $className): array;
 }

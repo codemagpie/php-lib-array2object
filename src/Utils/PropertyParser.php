@@ -19,17 +19,10 @@ use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
 
 class PropertyParser implements PropertyParserInterface
 {
-    protected string $className;
-
-    public function __construct(string $className)
-    {
-        $this->className = $className;
-    }
-
     /**
-     * @return array<string, null|PropertyType>
+     * @return array<string, PropertyType>
      */
-    public function parseType(): array
+    public function parseType(string $className): array
     {
         $phpDocExtractor = new PhpDocExtractor();
         $reflectionExtractor = new ReflectionExtractor();
@@ -42,27 +35,11 @@ class PropertyParser implements PropertyParserInterface
                 $reflectionExtractor,
             ],
         );
-        $properties = $propertyInfo->getProperties($this->className);
+        $properties = $propertyInfo->getProperties($className);
         $propertyTypes = [];
         foreach ($properties as $property) {
-            $types = $propertyInfo->getTypes($this->className, $property) ?: [];
-            $propertyType = new PropertyType();
-            if (! $types || count($types) > 1) {
-                $propertyType->isMixed = true;
-            } else {
-                $type = current($types);
-                $propertyType->type = $type->getBuiltinType();
-                $propertyType->className = $type->getClassName();
-                $propertyType->nullable = $type->isNullable();
-                if (($valueTypes = $type->getCollectionValueTypes())) {
-                    $child = new PropertyType();
-                    $child->type = $valueTypes[0]->getBuiltinType();
-                    $child->className = $valueTypes[0]->getClassName();
-                    $child->nullable = $valueTypes[0]->isNullable();
-                    $propertyType->child = $child;
-                }
-            }
-            $propertyTypes[$property] = $propertyType;
+            $types = $propertyInfo->getTypes($className, $property) ?: [];
+            $propertyTypes[$property] = PropertyType::createByPropertyInfoTypes($types, $property);
         }
         return $propertyTypes;
     }

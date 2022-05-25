@@ -11,15 +11,104 @@ declare(strict_types=1);
  */
 namespace CodeMagpie\ArrayToObject;
 
+use CodeMagpie\ArrayToObject\Utils\DataHelper;
+use Symfony\Component\PropertyInfo\Type;
+
 class PropertyType
 {
-    public bool $isMixed = false;
+    protected bool $isMixed = false;
 
-    public string $type;
+    protected string $type;
 
-    public ?string $className = null;
+    protected ?string $className = null;
 
-    public bool $nullable;
+    protected bool $nullable;
 
-    public ?PropertyType $child = null;
+    protected string $propertyNameHump;
+
+    protected string $propertyNameLine;
+
+    protected ?PropertyType $child = null;
+
+    /**
+     * @param Type[] $types
+     */
+    public static function createByPropertyInfoTypes(array $types, string $propertyName): self
+    {
+        $propertyType = new static();
+        $propertyType->propertyNameLine = DataHelper::stringToLine($propertyName);
+        $propertyType->propertyNameHump = DataHelper::stringToHump($propertyName);
+        if (! $types || count($types) > 1) {
+            $propertyType->isMixed = true;
+        } else {
+            $type = current($types);
+            $propertyType->type = $type->getBuiltinType();
+            $propertyType->className = $type->getClassName();
+            $propertyType->nullable = $type->isNullable();
+            if (($valueTypes = $type->getCollectionValueTypes())) {
+                $child = new static();
+                $child->type = $valueTypes[0]->getBuiltinType();
+                $child->className = $valueTypes[0]->getClassName();
+                $child->nullable = $valueTypes[0]->isNullable();
+                $propertyType->child = $child;
+            }
+        }
+        return $propertyType;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isMixed(): bool
+    {
+        return $this->isMixed;
+    }
+
+    /**
+     * @return string
+     */
+    public function getType(): string
+    {
+        return $this->type;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getClassName(): ?string
+    {
+        return $this->className;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isNullable(): bool
+    {
+        return $this->nullable;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPropertyNameHump(): string
+    {
+        return $this->propertyNameHump;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPropertyNameLine(): string
+    {
+        return $this->propertyNameLine;
+    }
+
+    /**
+     * @return PropertyType|null
+     */
+    public function getChild(): ?PropertyType
+    {
+        return $this->child;
+    }
 }

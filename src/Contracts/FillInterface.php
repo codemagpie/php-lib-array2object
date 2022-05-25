@@ -11,6 +11,7 @@ declare(strict_types=1);
  */
 namespace CodeMagpie\ArrayToObject\Contracts;
 
+
 interface FillInterface
 {
     public function fill(array $data): void;

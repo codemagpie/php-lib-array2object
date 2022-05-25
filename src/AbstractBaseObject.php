@@ -11,71 +11,83 @@ declare(strict_types=1);
  */
 namespace CodeMagpie\ArrayToObject;
 
-use CodeMagpie\ArrayToObject\Constants\PropertyModel;
+use ArrayAccess;
 use CodeMagpie\ArrayToObject\Contracts\FillInterface;
-use CodeMagpie\ArrayToObject\Exception\ArrayToObjectException;
+use CodeMagpie\ArrayToObject\Utils\DataHelper;
+use CodeMagpie\ArrayToObject\Utils\PropertyBuffer;
 use CodeMagpie\ArrayToObject\Utils\PropertyParser;
+use Hyperf\Utils\Contracts\Arrayable;
 
-abstract class AbstractBaseObject implements FillInterface
+abstract class AbstractBaseObject implements FillInterface, Arrayable, ArrayAccess
 {
-    /**
-     * @var array<string,PropertyType>
-     */
-    private static array $__propertyTypeCache = [];
-
     public function __construct(array $data)
     {
-        if ($data) {
-            // 清除缓存，防止内存泄漏
-            if (count(self::$__propertyTypeCache) > 1000) {
-                self::$__propertyTypeCache = [];
+        $data && $this->fill($data);
+    }
+
+    public function toArray(): array
+    {
+        return array_map(function ($value) {
+            if ($value instanceof Arrayable) {
+                $value = $value->toArray();
+            } elseif (is_array($value)) {
+                foreach ($value as $index => $item) {
+                    $value[$index] = $item instanceof Arrayable ? $item->toArray() : $item;
+                }
             }
-            $this->fill($data);
-        }
+            return $value;
+        }, get_object_vars($this));
     }
 
     public function fill(array $data): void
     {
-        $propertyTypes = $this->getPropertyTypes();
+        $propertyTypes = PropertyBuffer::getPropertyTypes(new PropertyParser(), static::class);
         foreach ($propertyTypes as $propertyName => $propertyType) {
-            if (! array_key_exists($propertyName, $data)) {
+            if (array_key_exists($propertyName, $data)) {
+                $value = $data[$propertyName];
+            } elseif (array_key_exists($propertyType->getPropertyNameLine(), $data) || array_key_exists($propertyType->getPropertyNameHump(), $data)) {
+                $value = $data[$propertyType->getPropertyNameLine()] ?? $data[$propertyType->getPropertyNameHump()];
+            } else {
                 continue;
             }
-            $value = $data[$propertyName];
-            $this->convertValue($value, $propertyType);
-            $this->{$propertyName} = $value;
+            $this->{$propertyName} = DataHelper::convertValue($value, $propertyType, __CLASS__);
         }
     }
 
-    protected function getPropertyTypes(): array
+
+    /**
+     * @param mixed $offset
+     */
+    public function offsetExists($offset): bool
     {
-        $propertyTypes = self::$__propertyTypeCache[static::class] ?? null;
-        if (isset($propertyTypes)) {
-            return $propertyTypes;
-        }
-        $propertyTypes = (new PropertyParser(static::class))->parseType();
-        self::$__propertyTypeCache[static::class] = $propertyTypes;
-        return $propertyTypes;
+        return isset($this->{$offset});
     }
 
-    protected function convertValue(&$value, PropertyType $propertyType): void
+    /**
+     * @param mixed $offset
+     * @return mixed
+     */
+    public function offsetGet($offset)
     {
-        if (! $propertyType->isMixed) {
-            if ($propertyType->nullable && ! $value) {
-                $value = null;
-            } elseif ($propertyType->className) {
-                if (! is_subclass_of($propertyType->className, __CLASS__)) {
-                    throw new ArrayToObjectException(sprintf('the class %s must be extends %s', $propertyType->className, __CLASS__));
-                }
-                $value = new $propertyType->className($value);
-            } elseif ($propertyType->child) {
-                foreach ($value as $index => $datum) {
-                    $this->convertValue($datum, $propertyType->child);
-                    $value[$index] = $datum;
-                }
-            } else {
-                settype($value, $propertyType->type);
-            }
-        }
+        return $this->{$offset};
+    }
+
+    /**
+     * @param $offset
+     * @param $value
+     * @return void
+     */
+    public function offsetSet($offset, $value): void
+    {
+        $this->{$offset} = $value;
+    }
+
+    /**
+     * @param $offset
+     * @return void
+     */
+    public function offsetUnset($offset): void
+    {
+        unset($this->{$offset});
     }
 }

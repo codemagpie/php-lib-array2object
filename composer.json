@@ -2,7 +2,14 @@
     "name": "codemagpie/array2object",
     "type": "library",
     "description": "A high performance, Supports converting array into object and object into array, easy to use",
-    "keywords": ["codemagpie", "array", "object", "array2object", "array to object", "convert"],
+    "keywords": [
+        "codemagpie",
+        "array",
+        "object",
+        "array2object",
+        "array to object",
+        "convert"
+    ],
     "authors": [
         {
             "name": "lyf",
@@ -12,7 +19,8 @@
     "require": {
         "php": ">=7.4",
         "symfony/property-info": "^5.4",
-        "hyperf/utils": "^2.2"
+        "hyperf/utils": "^2.2",
+        "codemagpie/utils": "^1.0"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.1",
@@ -20,6 +28,9 @@
         "ext-json": "*"
     },
     "license": "MIT",
+    "archive": {
+        "exclude": ["/tests", ".php-cs-fixer.php"]
+    },
     "scripts": {
         "cs-fix": "php-cs-fixer fix $1"
     },

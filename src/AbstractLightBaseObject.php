@@ -19,7 +19,7 @@ use CodeMagpie\ArrayToObject\Utils\PropertyBuffer;
 use CodeMagpie\ArrayToObject\Utils\PropertyDocParser;
 use Hyperf\Utils\Contracts\Arrayable;
 
-class AbstractLightBaseObject implements FillInterface, Arrayable, ArrayAccess
+abstract class AbstractLightBaseObject implements FillInterface, Arrayable, ArrayAccess
 {
     public function __construct(array $data)
     {

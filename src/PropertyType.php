@@ -11,7 +11,7 @@ declare(strict_types=1);
  */
 namespace CodeMagpie\ArrayToObject;
 
-use CodeMagpie\ArrayToObject\Utils\DataHelper;
+use CodeMagpie\Utils\Utils;
 use Symfony\Component\PropertyInfo\Type;
 
 class PropertyType
@@ -36,8 +36,8 @@ class PropertyType
     public static function createByPropertyInfoTypes(array $types, string $propertyName): self
     {
         $propertyType = new static();
-        $propertyType->propertyNameLine = DataHelper::stringToLine($propertyName);
-        $propertyType->propertyNameHump = DataHelper::stringToHump($propertyName);
+        $propertyType->propertyNameLine = Utils::stringToLine($propertyName);
+        $propertyType->propertyNameHump = Utils::stringToHump($propertyName);
         if (! $types || count($types) > 1) {
             $propertyType->isMixed = true;
         } else {
